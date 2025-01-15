@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import Game from './screen/Game';
-import Landing from './screen/landing';
-
+import Landing from './screen/Landing';
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import ReactDOM from "react-dom/client";
