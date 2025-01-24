@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Game from './screen/Game';
 import Landing from './screen/Landing';
+import Login from './screen/Login';
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import ReactDOM from "react-dom/client";
@@ -11,12 +12,12 @@ function App() {
   // const [count, setCount] = useState(0)
 
   return (
-    <div className='h-screen bg-slate-930'>
+    <div className='bg-slate-930 text-white'>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/game" element={<Game />} />
-
+<Route path="/login" element={<Login/>}/>
         </Routes>
       </BrowserRouter>
 

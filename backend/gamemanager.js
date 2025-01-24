@@ -23,7 +23,7 @@ class GameManager {
                 const message = JSON.parse(data.toString());
 
                 if (message.type === "init_game") {
-                    console.log("Handling init_game message");
+                    console.log("Handling init_game message") ;
                     if (this.pendingUser) {
                         console.log("Pairing with pending user");
                         const game = new Game(socket, this.pendingUser);

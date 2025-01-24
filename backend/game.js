@@ -17,6 +17,8 @@ class Game {
     handlemove(socket, move) {
         // Ensure the correct player is making the move
         if (this.movecount % 2 === 0 && socket !== this.player1) {
+            console.log("not your turn");
+            
             this.sendError(socket, "Not your turn");
             return;
         }
@@ -42,7 +44,9 @@ class Game {
 
         // Broadcast the move to the other player
         if (this.movecount % 2 === 0) {
+            
             this.player2.send(JSON.stringify({ type: "move", payload: move }));
+            // return;
         } else {
             this.player1.send(JSON.stringify({ type: "move", payload: move }));
         }
