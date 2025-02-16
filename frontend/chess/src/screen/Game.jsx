@@ -85,7 +85,55 @@ function Game() {
     if (!socket) return <div>Connecting...</div>;
 
     return (
+        <div className="h-screen flex flex-col ">
+            
+        {/* Navbar */}
+        <nav className="bg-gray-830">
+            <div className="px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    {/* Brand Name */}
+                    <div className="text-white text-3xl font-bold">Chess</div>
+
+                    <div className="md:flex space-x-4">
+                        <button
+                            onClick={() => navigate("/leaderboards")}
+                            className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                            Leaderboards
+                        </button>
+                        <button
+  onClick={async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("http://localhost:5000/logout", {
+        method: "GET",
+        credentials: "include", 
+      });
+
+      if (response.ok) {
+        navigate("/login"); // Redirect to login after logout
+      } else {
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  }}
+  className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+>
+  Logout
+</button>
+
+
+
+
+                        
+                    </div>
+                </div>
+            </div>
+        </nav>
         <div className="flex flex-col items-center justify-center h-full">
+          
             {isinvalid && (
                 <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
                     <p>Invalid move! Try again...</p>
@@ -139,6 +187,7 @@ function Game() {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 }

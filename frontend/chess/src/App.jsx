@@ -7,6 +7,7 @@ import viteLogo from '/vite.svg'
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css'
+import Register from './screen/Register';
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -18,6 +19,8 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/game" element={<Game />} />
 <Route path="/login" element={<Login/>}/>
+<Route path="/signup" element={<Register/>}/>
+
         </Routes>
       </BrowserRouter>
 

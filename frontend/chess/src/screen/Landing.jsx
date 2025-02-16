@@ -1,13 +1,14 @@
-import board from '../assets/board.webp';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import board from '../assets/board.webp';
 
 function Landing() {
     const navigate = useNavigate();
 
-    return (
 
+
+    return (
         <div className="h-screen flex flex-col ">
-            
             {/* Navbar */}
             <nav className="bg-gray-830">
                 <div className="px-4 sm:px-6 lg:px-8">
@@ -61,11 +62,26 @@ function Landing() {
                                 Challenge your friends and master the game of kings!
                             </p>
                             <button
-                                onClick={() => navigate("/game")}
+                                onClick={async () => {
+                                    try {
+                                        const response = await fetch("http://localhost:5000/game", {
+                                            credentials: "include" 
+                                        });
+
+                                        if (response.ok) {
+                                            navigate("/game"); 
+                                        } else {
+                                            navigate("/login"); 
+                                        }
+                                    } catch (error) {
+                                        console.error("Error checking auth:", error);
+                                    }
+                                }}
                                 className="bg-green-500 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition"
                             >
                                 Join Game
                             </button>
+
                         </div>
                     </div>
                 </div>
