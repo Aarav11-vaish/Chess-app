@@ -106,7 +106,15 @@ passport.use(new GoogleStrategy({
     }
   }
 ));
-
+app.get("/",(req,res)=>{    
+    console.log("Session:", req.session);
+    console.log("User:", req.user); 
+    if (req.isAuthenticated()) {
+        res.status(200).json({ message: "Authenticated" });
+    } else {
+        res.status(401).json({ error: "Unauthorized" });
+    }
+});
 
 // passport.use(new FacebookStrategy({
 //     clientID: FACEBOOK_APP_ID,
@@ -119,6 +127,21 @@ passport.use(new GoogleStrategy({
 //         });
 //     }
 // ));
+
+app.get('/dashboard', (req, res) => {
+    console.log("Session:", req.session);
+    console.log("User:", req.user); 
+    if (req.isAuthenticated()) {
+        // res.status(200).json({ message: "Authenticated" });
+        console.log(req.user.username);
+        
+    res.json({ username: req.user.username });
+
+    } else {
+        res.status(401).json({ error: "Unauthorized" });
+    }
+});
+
 app.get('/auth/google',  
         passport.authenticate('google', { scope: ['profile'] }));
         console.log(profile);
@@ -127,7 +150,7 @@ app.get(
     '/auth/google/game',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-        res.redirect('http://localhost:5173/game'); // ✅ Redirect user after successful login
+        res.redirect('http://localhost:5173/dashboard'); // ✅ Redirect user after successful login
     }
 );
 
@@ -149,7 +172,7 @@ app.post('/signup', (req, res) => {
                 console.error("Auto-login error after signup:", err);
                 return res.status(500).json({ error: 'Auto-login failed' });
             }
-            res.json({ message: 'Signup successful', redirectTo: '/game' });
+            res.json({ message: 'Signup successful' });
         });
     });
 });
@@ -169,7 +192,9 @@ app.post('/login', (req, res, next) => {
                 console.error("Session creation error:", err);
                 return res.status(500).json({ error: 'Login failed' });
             }
-            res.json({ message: 'Login successful', redirectTo: '/game' });
+            res.json({ message: 'Login successful',
+
+             });
         });
     })(req, res, next);
 });
@@ -178,26 +203,28 @@ app.get('/game', (req, res) => {
     console.log("Session:", req.session);
     console.log("User:", req.user); 
     if (req.isAuthenticated()) {
-        res.status(200).json({ message: "Authenticated" });
+        res.status(200 ).json({ message: "Authenticated"});
     } else {
-        res.status(401).json({ error: "Unauthorized" });
+        res.status(401).json({ error: "Unauthorized"});
     }
 });
 
 
-app.get('/logout', (req, res, next) => {
+app.post('/logout', (req, res, next) => {
     req.logout((err) => {
-        if (err) return next(err);
-
-        req.session.destroy((err) => {
-            if (err) return next(err);
-            console.log(req.user ,"logged out");
-            
-            res.clearCookie('connect.sid'); 
-            res.json({ message: "Logged out" }); 
-        });
+      if (err) {
+        return next(err);
+      }
+      req.session.destroy((err) => {
+        if (err) {
+          return next(err);
+        }
+        res.clearCookie('connect.sid'); // Adjust the cookie name if different
+        res.json({ message: 'Logged out' });
+      });
     });
-});
+  });
+  
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

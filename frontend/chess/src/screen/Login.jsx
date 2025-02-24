@@ -20,10 +20,10 @@ function Login() {
             const data = await response.json();
     
             if (response.ok) {
-                navigate('/game'); // Redirect to the game screen
+                navigate('/dashboard'); 
             } else {
-                console.log(data, "user already exists");
-                
+                console.log(data, "user already exists");               
+
                 // setError();
             }
         } catch (err) {
