@@ -38,7 +38,6 @@ class GameManager {
                     }
                 } else if (message.type === "move") {
                     const game = this.game.find(game => game.player1 === socket || game.player2 === socket);
-                    // console.log(game);
                     
                     if (game) {
                         game.handlemove(socket, message.payload.move); // Fix: Correctly access `message.move`

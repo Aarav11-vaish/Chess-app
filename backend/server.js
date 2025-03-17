@@ -1,43 +1,67 @@
-// const WebSocket = require('ws');
 import express from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-// import { Chess } from 'chess.js';
-
 import WebSocket from 'ws';
+
 const { Chess } = require('chess.js');
 
 const wss = new WebSocket.Server({ port: 8080 });
 const chess = new Chess();
 
-const app=express();
+const app = express();
+const port = process.env.PORT || 4000; // Fixed 'port' env variable
+
 app.use(bodyParser.urlencoded({ extended: true }));
-const port= process.env.port||4000;
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({credentials:true }));
-   //cors is used to allow the request from different origin)
+app.use(cors({ credentials: true })); // CORS to allow cross-origin requests
 
-app.listen(port,()=>{
-    console.log(`server is running on port ${port}`);
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
 
 wss.on('connection', (ws) => {
+    console.log('New player connected');
+
+    // Send current game state to newly connected client
+    ws.send(JSON.stringify({ type: 'game_state', payload: { fen: chess.fen() } }));
+
     ws.on('message', (message) => {
-        const data = JSON.parse(message);
-        switch (data.type) {
-            case 'init_game':
-                chess.reset();
-                broadcast({ type: 'init_game' });
-                break;
-            case 'move':
-                const move = data.payload.move;
-                chess.move(move);
-                broadcast({ type: 'move', payload: { move } });
-                break;
-            // ...existing code...
+        try {
+            const data = JSON.parse(message);
+
+            switch (data.type) {
+                case 'init_game':
+                    chess.reset();
+                    broadcast({ type: 'init_game', payload: { fen: chess.fen() } });
+                    break;
+
+                case 'move':
+                    const move = data.payload.move;
+                    const result = chess.move(move);
+
+                    if (result) {
+                        broadcast({ type: 'move', payload: { move, fen: chess.fen() } });
+                    } else {
+  ws.send(JSON.stringify({
+                            type: 'invalid_move',
+                            payload: { move, reason: "Invalid move" }
+                        }));
+
+                        // Send the correct game state to prevent frontend from getting stuck
+                        ws.send(JSON.stringify({ type: 'game_state', payload: { fen: chess.fen(), turn: chess.turn() } }));                        
+                    }
+                    break;
+            }
+        } catch (error) {
+            console.error('Invalid message received:', message);
+            ws.send(JSON.stringify({ type: 'error', payload: { message: 'Invalid data format' } }));
         }
+    });
+
+    ws.on('close', () => {
+        console.log('A player disconnected');
     });
 });
 
@@ -47,5 +71,4 @@ function broadcast(data) {
             client.send(JSON.stringify(data));
         }
     });
-
 }
