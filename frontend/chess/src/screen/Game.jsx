@@ -62,26 +62,25 @@ function Game() {
                     setUserState("Waiting for an opponent..."); // ✅ Show loader
                     break;
                 }
-                case "move": {
-                    const move = message.payload;
-                    try {
-                        const result = chess.move(move);
-                        if (result) {
-                            setBoard(chess.board());
-                            setMoves(prevMoves => [...prevMoves, result]);
-                            setTurn(chess.turn());
-                            console.log(turn);
+               case "move": {
+  try {
+    const newChess = new Chess(chess.fen());
+    const result = newChess.move(message.payload);
+    if (result) {
+      setChess(newChess);
+      setBoard(newChess.board());
+      setMoves(prev => [...prev, result]);
+      setTurn(newChess.turn());
+    } else {
+      throw new Error("Invalid move");
+    }
+  } catch (error) {
+    console.error("Invalid move received:", message.payload);
+    setInvalid(true);
+  }
+  break;
+}
 
-                            console.log("Move received:", result);
-                        } else {
-                            throw new Error("Invalid move");
-                        }
-                    } catch (error) {
-                        console.error("Invalid move received:", move);
-                        setInvalid(true);
-                    }
-                    break;
-                }
                 case "game_over": {
                     console.log("Game over:", message.payload);
                     break;
@@ -185,6 +184,17 @@ function Game() {
                             {started && (
 
                                 <div className="space-y-6">
+                                     <div className="text-center text-xl font-semibold mt-4">
+    <span className="text-gray-300">Current Turn: </span>
+    <span className={`font-bold ${turn === 'w' ? 'text-white' : 'text-black bg-gray-200 px-2 rounded'}`}>
+      {turn === 'w' ? 'White' : 'Black'}
+    </span>
+    {((turn === 'w' && playerColor === 'white') || (turn === 'b' && playerColor === 'black')) ? (
+      <span className="ml-2 text-green-400 animate-pulse">Your Move</span>
+    ) : (
+      <span className="ml-2 text-gray-400">Waiting...</span>
+    )}
+  </div>
                                     {/* <div className="text-center text-xl font-semibold mt-4">
     <span className="text-gray-300">Turn: </span>
     <span className={turn === 'w' ? "text-white" : "text-black bg-gray-200 px-2 rounded"}>

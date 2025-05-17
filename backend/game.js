@@ -8,51 +8,38 @@ class Game {
         this.turn = player1;
         this.moves = [];
         this.startTime = new Date();
+        this.movecount = 0;
+        this.gameId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+        this.sendInit();
+    }
+
+    sendInit() {
         this.player1.send(JSON.stringify({ type: "init_game", payload: { color: 'white' } }));
         this.player2.send(JSON.stringify({ type: "init_game", payload: { color: 'black' } }));
-        this.movecount = 0;
-        this.gameId = null;
     }
 
     handlemove(socket, move) {
-        // Ensure the correct player is making the move
-        if (this.movecount % 2 === 0 && socket !== this.player1) {
-            console.log("not your turn");
-            
-            this.sendError(socket, "Not your turn");
-            return;
-        }
-        if (this.movecount % 2 === 1 && socket !== this.player2) {
-            this.sendError(socket, "Not your turn");
-            return;
-        }
-    
-        // Validate and apply the move
-        const result = this.board.move(move);
-        if (!result) {
-            this.sendError(socket, "Invalid move. Try again.");
-            return; // Allow the player to try another move
+        const currentPlayer = this.movecount % 2 === 0 ? this.player1 : this.player2;
+        const opponent = this.movecount % 2 === 0 ? this.player2 : this.player1;
+
+        if (socket !== currentPlayer) {
+            return this.sendError(socket, "Not your turn");
         }
 
-        // Check if the game is over
+        const result = this.board.move(move);
+        if (!result) {
+            return this.sendError(socket, "Invalid move. Try again.");
+        }
+
+        opponent.send(JSON.stringify({ type: "move", payload: move }));
+        this.movecount++;
+
         if (this.board.isGameOver()) {
             const winner = this.board.turn() === 'w' ? 'black' : 'white';
             this.player1.send(JSON.stringify({ type: "game_over", payload: { winner } }));
             this.player2.send(JSON.stringify({ type: "game_over", payload: { winner } }));
-            return;
         }
-
-        // Broadcast the move to the other player
-        if (this.movecount % 2 === 0) {
-            
-            this.player2.send(JSON.stringify({ type: "move", payload: move }));
-            // return;
-        } else {
-            this.player1.send(JSON.stringify({ type: "move", payload: move }));
-        }
-
-        // Increment the move count
-        this.movecount++;
     }
 
     sendError(socket, message) {

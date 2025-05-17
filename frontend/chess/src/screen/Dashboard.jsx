@@ -33,7 +33,7 @@ credentials: 'include',
       });
 
       if (response.ok) {
-        window.location.reload();
+        // window.location.reload();
         navigate('/');
       } else {
         console.error('Logout failed');
@@ -43,22 +43,12 @@ credentials: 'include',
     }
   };
 
-  const handleJoinGame = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/game', {
-        method: 'GET',
-        credentials: 'include',
-      });
+  // Only fix: remove /game fetch call and navigate directly
 
-      if (response.ok) {
-        navigate('/game');
-      } else {
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error('Error checking auth:', error);
-    }
-  };
+const handleJoinGame = () => {
+  navigate('/game');
+};
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">

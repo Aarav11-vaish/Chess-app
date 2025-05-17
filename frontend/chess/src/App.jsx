@@ -9,9 +9,11 @@ import "./App.css";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/", { credentials: "include" }) // ✅ Includes session cookies
+useEffect(() => {
+  const checkAuth = () => {
+    fetch("http://localhost:5000/", {
+      credentials: "include",
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.message === "Authenticated") {
@@ -21,11 +23,19 @@ function App() {
         }
       })
       .catch(() => setIsAuthenticated(false));
-  }, []);
+  };
 
-  if (isAuthenticated === null) {
-    return <h1>Loading...</h1>; 
-  }
+  checkAuth();
+
+  // Optional: Retry once in case session wasn't ready
+  const retryTimeout = setTimeout(() => {
+    if (isAuthenticated === false) {
+      checkAuth();
+    }
+  }, 500); // Wait half a second
+
+  return () => clearTimeout(retryTimeout);
+}, []);
 
   return (
     <div className="bg-slate-930 text-white">
@@ -45,7 +55,7 @@ function App() {
         
           <Route
             path="/signup"
-            element={isAuthenticated ? <Navigate to="/login" /> : <Register />}
+            element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />}
           />
           <Route
             path="/dashboard"

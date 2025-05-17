@@ -1,9 +1,9 @@
 import Game from './game.js';
 
-class GameManager {   
+class GameManager {
     constructor() {
-        this.game = []; // To store game state
-        this.users = []; // List of active users
+        this.games = [];
+        this.users = [];
         this.pendingUser = null;
     }
 
@@ -14,46 +14,48 @@ class GameManager {
 
     removeUser(socket) {
         this.users = this.users.filter(user => user !== socket);
+        this.games = this.games.filter(game => game.player1 !== socket && game.player2 !== socket);
+
+        if (this.pendingUser === socket) {
+            this.pendingUser = null;
+        }
     }
 
     handleMessage(socket) {
         socket.on("message", (data) => {
-            console.log("Received message:", data.toString());
             try {
                 const message = JSON.parse(data.toString());
-
-                if (message.type === "init_game") {
-                    console.log("Handling init_game message") ;
-                    if (this.pendingUser) {
-                        console.log("Pairing with pending user");
-                        const game = new Game(socket, this.pendingUser);
-                        // console.log(game);
-                        this.game.push(game);
-                        // console.log(socket);
-                        
-                        this.pendingUser = null ;
-                    } else {
-                        console.log("Setting user as pending");
-                        this.pendingUser = socket;
-                    }
-                } else if (message.type === "move") {
-                    const game = this.game.find(game => game.player1 === socket || game.player2 === socket);
-                    
-                    if (game) {
-                        game.handlemove(socket, message.payload.move); // Fix: Correctly access `message.move`
-                    }
+                switch (message.type) {
+                    case "init_game":
+                        this.initGame(socket);
+                        break;
+                    case "move":
+                        this.routeMove(socket, message.payload.move);
+                        break;
+                    default:
+                        socket.send(JSON.stringify({ type: "error", payload: { message: "Unknown message type." } }));
                 }
             } catch (err) {
-                console.error("Error handling message:", err);
+                console.error("Message parse error:", err);
+                socket.send(JSON.stringify({ type: "error", payload: { message: "Malformed message." } }));
             }
         });
     }
-    
 
+    initGame(socket) {
+        if (this.pendingUser) {
+            const game = new Game(this.pendingUser, socket);
+            this.games.push(game);
+            this.pendingUser = null;
+        } else {
+            this.pendingUser = socket;
+        }
+    }
 
-    // joinGame(socket) {
-    //     // Implementation here
-    // }
+    routeMove(socket, move) {
+        const game = this.games.find(g => g.player1 === socket || g.player2 === socket);
+        if (game) game.handlemove(socket, move);
+    }
 }
 
 export { GameManager };
