@@ -5,6 +5,7 @@ import Game from "./screen/Game";
 import Login from "./screen/Login";
 import Register from "./screen/Register";
 import Dashboard from "./screen/dashboard";
+import Leaderboard from "./screen/Leaderboard";
 import "./App.css";
 
 function App() {
@@ -61,6 +62,8 @@ useEffect(() => {
             path="/dashboard"
             element={isAuthenticated ? <Dashboard /> : <Login />}
           />
+
+          <Route path="/leaderboards" element={<Leaderboard />} />
         </Routes>
       </BrowserRouter>
     </div>

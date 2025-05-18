@@ -25,13 +25,14 @@ class GameManager {
         socket.on("message", (data) => {
             try {
                 const message = JSON.parse(data.toString());
-                switch (message.type) {
+                switch(message.type) {  
                     case "init_game":
                         this.initGame(socket);
-                        break;
+                        break;  
                     case "move":
-                        this.routeMove(socket, message.payload.move);
+                        this.routeMove(socket, message.payload);
                         break;
+                        
                     default:
                         socket.send(JSON.stringify({ type: "error", payload: { message: "Unknown message type." } }));
                 }
