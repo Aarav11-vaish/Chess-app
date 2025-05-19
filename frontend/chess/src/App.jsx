@@ -28,14 +28,6 @@ useEffect(() => {
 
   checkAuth();
 
-  // Optional: Retry once in case session wasn't ready
-  const retryTimeout = setTimeout(() => {
-    if (isAuthenticated === false) {
-      checkAuth();
-    }
-  }, 500); // Wait half a second
-
-  return () => clearTimeout(retryTimeout);
 }, []);
 
   return (

@@ -21,14 +21,20 @@ function Landing() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-white p-4">Loading...</div>;
+  if (loading) return <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+  <div className="text-4xl font-bold text-green-400 animate-pulse mb-4">
+    ♟️ Connecting to Chess Arena...
+  </div>
+  <div className="w-12 h-12 border-4 border-green-500 border-dotted rounded-full animate-spin"></div>
+  <p className="mt-4 text-gray-300">Waiting for server handshake...</p>
+</div>
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-      <nav className="bg-gray-900 shadow-lg py-2">
-        <div className="container mx-auto flex justify-between items-center px-6">
-          <div className="text-4xl font-extrabold tracking-wide">Chess</div>
-          <div className="flex space-x-4">
+     <nav className="bg-gray-900 shadow-lg py-3 w-full">
+  <div className="flex justify-between items-center px-6 max-w-full">
+    <div className="text-4xl font-extrabold text-white">Chess</div>
+    <div className="flex space-x-4">
             <button onClick={() => navigate('/leaderboards')} className="hover:text-green-400 text-sm">
               Leaderboards
             </button>
@@ -43,7 +49,7 @@ function Landing() {
       </nav>
 
       <main className="flex-grow flex items-center justify-center px-6 py-12">
-        <div className="container max-w-5xl mx-auto bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12">
+        <div className=" max-w-5xl mx-auto bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="flex justify-center">
               <img src={board} alt="Chess board" className="w-full max-w-sm rounded-lg shadow-lg border-4 border-gray-700" />

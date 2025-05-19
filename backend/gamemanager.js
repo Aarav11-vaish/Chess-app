@@ -30,7 +30,7 @@ class GameManager {
                         this.initGame(socket);
                         break;  
                     case "move":
-                        this.routeMove(socket, message.payload);
+                         this.routeMove(socket, message.payload); // ✅ Correct
                         break;
                         
                     default:

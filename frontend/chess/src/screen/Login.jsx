@@ -35,72 +35,86 @@ function Login() {
     };
    
         return (
-            <div id='root1' className="items-center justify-center">
-              <div className="relative z-10 p-8 bg-gray-50 rounded-lg shadow-lg max-w-md w-full border border-gray-300">
-                <h2 className="text-3xl font-bold text-center mb-6 text-gray-900">Chess Login</h2>
-                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-4">
-                    <label htmlFor="email" className="block text-gray-700 text-sm font-medium mb-2">
-                      Email
-                    </label>
-                    <input
-                      name="email"
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-white-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                      required
-                    />
-                  </div>
-                  <div className="mb-6">
-                    <label htmlFor="password" className="block text-gray-700 text-sm font-medium mb-2">
-                      Password
-                    </label>
-                    <input
-                      name="password"
-                      type="password"
-                      id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-white-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300"
-                  >
-                    Login
-                  </button>
-                </form>
-                <div className="my-4 flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">or</span>
-                </div>
-                <div 
-                 onClick={handleGoogleLogin}
-                 className="flex justify-center">
-                  <button type='submit'
-                  className="flex items-center px-4 py-2 bg-white text-gray-700 font-semibold border border-gray-300 rounded-lg shadow hover:bg-gray-50 transition duration-300">
-                    <img
-                       src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_16dp.png"
-                       alt="Google logo"
-                       className="w-5 h-5 mr-2"
-                    />
-                    Sign Up with Google
-                  </button>
-                </div>
-                <div className="text-center text-sm text-gray-600 mt-4">
-                  Don't have an account?{' '}
-                  <a href="/signup" className="text-gray-800 hover:underline">
-                    Sign up
-                  </a>
-                </div>
-              </div>
-            </div>
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4 py-12">
+  <div className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 p-8 relative">
+    <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-6 tracking-tight">
+      ♟️ Welcome Back to Chess
+    </h2>
+
+    {error && (
+      <p className="text-red-500 text-sm text-center mb-4 animate-pulse">
+        {error}
+      </p>
+    )}
+
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          Email Address
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          required
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          Password
+        </label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          required
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:outline-none"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg shadow-lg transition duration-300"
+      >
+        Log In
+      </button>
+    </form>
+
+    <div className="my-6 flex items-center justify-center">
+      <span className="text-gray-400 text-sm">— or —</span>
+    </div>
+
+    <div className="flex justify-center">
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg shadow hover:bg-gray-50 transition duration-300"
+      >
+        <img
+          src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_16dp.png"
+          alt="Google logo"
+          className="w-5 h-5"
+        />
+        Sign in with Google
+      </button>
+    </div>
+
+    <p className="text-center text-sm text-gray-600 mt-6">
+      Don't have an account?{' '}
+      <a href="/signup" className="text-gray-900 font-semibold hover:underline">
+        Sign up
+      </a>
+    </p>
+  </div>
+</div>
           );
         };
 

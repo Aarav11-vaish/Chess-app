@@ -93,6 +93,8 @@ app.get('/auth/google/game',
     (req, res) => res.redirect('http://localhost:5173/dashboard'));
 
 app.post('/signup', (req, res) => {
+    console.log(req.body);
+    
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password are required.' });
 
