@@ -11,20 +11,35 @@ import "./App.css";
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 useEffect(() => {
-  const checkAuth = () => {
-    fetch("http://localhost:5000/", {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.message === "Authenticated") {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      })
-      .catch(() => setIsAuthenticated(false));
-  };
+
+async function checkAuth(){
+  const response=await fetch("http://localhost:5000/", {
+    credentials: "include",
+  });
+  const data =await response.json();
+  if (data.message === "Authenticated") {
+    setIsAuthenticated(true);
+  } else {
+    setIsAuthenticated(false);
+  }
+  return data;
+}
+
+
+  // const checkAuth = () => {
+  //   fetch("http://localhost:5000/", {
+  //     credentials: "include",
+  //   })
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       if (data.message === "Authenticated") {
+  //         setIsAuthenticated(true);
+  //       } else {
+  //         setIsAuthenticated(false);
+  //       }
+  //     })
+  //     .catch(() => setIsAuthenticated(false));
+  // };
 
   checkAuth();
 
