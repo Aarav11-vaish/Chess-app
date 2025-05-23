@@ -66,16 +66,10 @@ function Game() {
         }
 
         case "move": {
-          // ✅ Skip if same as your last sent move
-          if (
-            lastSentMove &&
-            lastSentMove.from === message.payload.from &&
-            lastSentMove.to === message.payload.to
-          ) {
-            console.log("Skipping own move replay");
+          if (!started) {
+            alert("Game not started yet.");
             return;
           }
-
           try {
             setChess(prev => {
               const newChess = new Chess(prev.fen());
@@ -97,6 +91,13 @@ function Game() {
           }
           break;
         }
+        case "check":
+  alert(`${message.payload.checkedColor} in check!`);
+  break;
+
+case "checkmate":
+  alert(`${message.payload.winner} wins by checkmate!`);
+  break;
 
         case "game_over": {
           console.log("Game Over:", message.payload);
@@ -133,7 +134,7 @@ function Game() {
     const myTurn = playerColor === 'white' ? 'w' : 'b';
     if (turn !== myTurn) {
       setInvalid(true);
-      return;
+      // return;
     }
 
     try {

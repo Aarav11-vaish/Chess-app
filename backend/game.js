@@ -19,28 +19,38 @@ class Game {
         this.player2.send(JSON.stringify({ type: "init_game", payload: { color: 'black' } }));
     }
 
-    handlemove(socket, move) {
-        const currentPlayer = this.movecount % 2 === 0 ? this.player1 : this.player2;
-        const opponent = this.movecount % 2 === 0 ? this.player2 : this.player1;
+   handlemove(socket, move) {
+  const currentPlayer = this.movecount % 2 === 0 ? this.player1 : this.player2;
+  const opponent = this.movecount % 2 === 0 ? this.player2 : this.player1;
 
-        if (socket !== currentPlayer) {
-            return this.sendError(socket, "Not your turn");
-        }
+  if (socket !== currentPlayer) {
+    return this.sendError(socket, "Not your turn");
+  }
 
-        const result = this.board.move(move);
-        if (!result) {
-            return this.sendError(socket, "Invalid move. Try again.");
-        }
+  const result = this.board.move(move);
+  if (!result) {
+    return this.sendError(socket, "Invalid move. Try again.");
+  }
 
-        opponent.send(JSON.stringify({ type: "move", payload: move }));
-        this.movecount++;
+  opponent.send(JSON.stringify({ type: "move", payload: move }));
+  this.movecount++;
 
-        if (this.board.isGameOver()) {
-            const winner = this.board.turn() === 'w' ? 'black' : 'white';
-            this.player1.send(JSON.stringify({ type: "game_over", payload: { winner } }));
-            this.player2.send(JSON.stringify({ type: "game_over", payload: { winner } }));
-        }
-    }
+  // Notify about check
+  if (this.board.isCheck()) {
+    const checkedColor = this.board.turn() === 'w' ? 'white' : 'black'; // the one currently in check
+    this.player1.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
+    this.player2.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
+  }
+
+  // Notify about game over / checkmate
+  if (this.board.isCheckmate()) {
+    const loserColor = this.board.turn() === 'w' ? 'white' : 'black';
+    const winnerColor = loserColor === 'white' ? 'black' : 'white';
+    this.player1.send(JSON.stringify({ type: "checkmate", payload: { winner: winnerColor } }));
+    this.player2.send(JSON.stringify({ type: "checkmate", payload: { winner: winnerColor } }));
+  }
+}
+
 
     sendError(socket, message) {
         socket.send(JSON.stringify({ type: "error", payload: { message } }));
