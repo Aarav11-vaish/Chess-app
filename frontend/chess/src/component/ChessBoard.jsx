@@ -4,9 +4,15 @@ function ChessBoard({ board, onMove }) {
   const [from, setFrom] = useState(null);
 
   const handleClick = (square) => {
+
+    
     if (!from) {
       setFrom(square);
     } else {
+      if (from === square) {
+        setFrom(null);
+        return;
+      }
       if (onMove && typeof onMove === 'function') {
         onMove(from, square);
       }
@@ -20,14 +26,18 @@ function ChessBoard({ board, onMove }) {
         <div key={i} className="flex">
           {row.map((piece, j) => {
             const square = String.fromCharCode(97 + j) + (8 - i);
+            const isSelected = from === square;
+            const isLightSquare = (i + j) % 2 === 0;
+            const baseColor = isLightSquare ? 'bg-emerald-400' : 'bg-slate-800';
+            const hoverColor = isLightSquare ? 'hover:bg-emerald-600' : 'hover:bg-slate-900';
+            const selectedColor = isSelected ? 'bg-yellow-400' : '';
+
             return (
               <div
-                onClick={() => handleClick(square)}
                 key={j}
-                className={`w-16 h-16 flex justify-center items-center cursor-pointer transition-colors duration-200 
-                  ${(i + j) % 2 === 0 ? "bg-emerald-400 hover:bg-emerald-600" : "bg-slate-800 hover:bg-slate-900"}
-                  ${from === square ? "bg-yellow-400" : ""}
-                  hover:opacity-90`}
+                onClick={() => handleClick(square)}
+                className={`w-16 h-16 flex justify-center items-center cursor-pointer transition-colors duration-200
+                  ${baseColor} ${hoverColor} ${selectedColor} hover:opacity-90`}
               >
                 {piece && (
                   <img

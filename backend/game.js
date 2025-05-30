@@ -35,22 +35,31 @@ class Game {
   opponent.send(JSON.stringify({ type: "move", payload: move }));
   this.movecount++;
 
-  // Notify about check
-  if (this.board.isCheck()) {
-    const checkedColor = this.board.turn() === 'w' ? 'white' : 'black'; // the one currently in check
-    this.player1.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
-    this.player2.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
+  if (this.board.inCheck()) {
+    const checkedColor = this.board.turn() === 'w' ? 'white' : 'black'; 
+    if(checkedColor === 'white') {
+      this.player1.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
+    }
+    else if(checkedColor === 'black') {
+      this.player2.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
+    }
+    
   }
 
-  // Notify about game over / checkmate
   if (this.board.isCheckmate()) {
     const loserColor = this.board.turn() === 'w' ? 'white' : 'black';
     const winnerColor = loserColor === 'white' ? 'black' : 'white';
     this.player1.send(JSON.stringify({ type: "checkmate", payload: { winner: winnerColor } }));
     this.player2.send(JSON.stringify({ type: "checkmate", payload: { winner: winnerColor } }));
   }
-}
+  if(this.board.isDraw()){
+    const drawmessage =" The game is a draw.";
+    this.player1.send(JSON.stringify({ type: "draw", payload: { message: drawmessage } }));
+    this.player2.send(JSON.stringify({ type: "draw", payload: { message: drawmessage } }));
+  }
 
+
+}
 
     sendError(socket, message) {
         socket.send(JSON.stringify({ type: "error", payload: { message } }));

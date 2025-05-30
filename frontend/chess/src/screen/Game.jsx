@@ -19,13 +19,6 @@ function Game() {
   const [lastSentMove, setLastSentMove] = useState(null); // ✅ new
   const socket = usesocket();
 
-  useEffect(() => {
-    let timeoutId;
-    if (isinvalid) {
-      timeoutId = setTimeout(() => setInvalid(false), 1000);
-    }
-    return () => clearTimeout(timeoutId);
-  }, [isinvalid]);
 
   useEffect(() => {
     fetch('http://localhost:5000/dashboard', { credentials: 'include' })
@@ -66,10 +59,7 @@ function Game() {
         }
 
         case "move": {
-          if (!started) {
-            alert("Game not started yet.");
-            return;
-          }
+       
           try {
             setChess(prev => {
               const newChess = new Chess(prev.fen());
@@ -77,9 +67,9 @@ function Game() {
             const result = newChess.move({
                 from: message.payload.from,
                 to: message.payload.to,
-                // promotion: 'q' // always promote to a queen for simplicity
+               
               });
-              if (!result) throw new Error("Invalid move from server");
+              
               setBoard(newChess.board());
               setMoves(prev => [...prev, result]);
               setTurn(newChess.turn());
@@ -92,6 +82,7 @@ function Game() {
           break;
         }
         case "check":
+
   alert(`${message.payload.checkedColor} in check!`);
   break;
 
@@ -100,6 +91,7 @@ case "checkmate":
   break;
 
         case "game_over": {
+          alert("Game Over: " + message.payload.message);
           console.log("Game Over:", message.payload);
           break;
         }
@@ -130,32 +122,36 @@ case "checkmate":
     socket.send(JSON.stringify({ type: "init_game" }));
   };
 
-  const handlePlayerMove = (from, to) => {
-    const myTurn = playerColor === 'white' ? 'w' : 'b';
-    if (turn !== myTurn) {
-      setInvalid(true);
-      // return;
-    }
+ const handlePlayerMove = (from, to) => {
+  const myTurn = playerColor === 'white' ? 'w' : 'b';
+  if (turn !== myTurn) {
+    setInvalid(true);
+    return; // ✅ important
+  }
 
-    try {
-      setChess(prev => {
-        const newChess = new Chess(prev.fen());
-        const result = newChess.move({ from, to });
-        if (!result) throw new Error("Invalid local move");
+  try {
+    setChess(prev => {
+      const newChess = new Chess(prev.fen());
+      const result = newChess.move({ from, to });
 
-        setBoard(newChess.board());
-        setMoves(prev => [...prev, result]);
-        setTurn(newChess.turn());
-        setLastSentMove({ from, to }); // ✅ Track last move
-       socket.send(JSON.stringify({ type: "move", payload: { from, to } }));
+      if (!result) throw new Error("Invalid local move");
 
-        return newChess;
-      });
-    } catch (err) {
-      console.warn("Invalid move:", err.message);
-      setInvalid(true);
-    }
-  };
+      setBoard(newChess.board());
+      setMoves(prev => [...prev, result]);
+      setTurn(newChess.turn());
+      setLastSentMove({ from, to });
+
+      // ✅ Only send to server if move is valid
+      socket.send(JSON.stringify({ type: "move", payload: { from, to } }));
+
+      return newChess;
+    });
+  } catch (err) {
+    console.warn("Invalid move:", err.message);
+    setInvalid(true);
+  }
+};
+
 
   if (!socket) return <div className="text-white text-center mt-10">Connecting...</div>;
 

@@ -30,11 +30,28 @@ class GameManager {
                         this.initGame(socket);
                         break;  
                     case "move":
-                         this.routeMove(socket, message.payload); // ✅ Correct
+                         this.routeMove(socket, message.payload); 
+                        break;
+                        case "check":
+                        const game = this.games.find(g => g.player1 === socket || g.player2 === socket);
+                        if (game) {
+                            const checkedColor = game.getCheckedColor();
+                            socket.send(JSON.stringify({ type: "check", payload: { checkedColor } }));
+                        }
+                        
+
+                        case "checkmate":
+                        const gameOver = this.games.find(g => g.player1 === socket || g.player2 === socket);
+                        if (gameOver) {
+                            const winner = gameOver.getWinner();
+                            socket.send(JSON.stringify({ type: "checkmate", payload: { winner } }));
+                        }
+
+
+                        case "error":
+                        socket.send(JSON.stringify({ type: "error", payload: { message: "Unknown message type." } }));
                         break;
                         
-                    default:
-                        socket.send(JSON.stringify({ type: "error", payload: { message: "Unknown message type." } }));
                 }
             } catch (err) {
                 console.error("Message parse error:", err);
@@ -57,6 +74,9 @@ class GameManager {
         const game = this.games.find(g => g.player1 === socket || g.player2 === socket);
         if (game) game.handlemove(socket, move);
     }
+    //what is routemove doing 
+    // It finds the game associated with the socket and calls the handlemove method on that game instance.
+
 }
 
 export { GameManager };
