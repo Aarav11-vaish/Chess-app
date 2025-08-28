@@ -14,13 +14,19 @@ import bodyParser from 'body-parser';
 dotenv.config();
 
 const app = express();
-const PORT = 5000;
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = process.env.PORT || 5000;
+const WSPORT = process.env.WSPORT || 8080;
 
+// -----------------------------
+// MongoDB Connection
+// -----------------------------
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch(console.error);
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch(err => console.error("❌ MongoDB connection error:", err));
 
+// -----------------------------
+// User Schema & Model
+// -----------------------------
 const userSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true },
     username: { type: String, unique: true, sparse: true },
@@ -28,9 +34,14 @@ const userSchema = new mongoose.Schema({
 });
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
+
 const User = mongoose.model("User", userSchema);
 
+// -----------------------------
+// Passport Config
+// -----------------------------
 passport.use(User.createStrategy());
+
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
     try {
@@ -40,6 +51,8 @@ passport.deserializeUser(async (id, done) => {
         done(err);
     }
 });
+
+// Google OAuth Strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
@@ -47,54 +60,64 @@ passport.use(new GoogleStrategy({
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
 }, async (accessToken, refreshToken, profile, cb) => {
     try {
-        const existingUser = await User.findOne({ googleId: profile.id });
-        if (existingUser) return cb(null, existingUser);
-
-        const newUser = new User({
-            googleId: profile.id,
-            username: profile.displayName.replace(/\s+/g, '').toLowerCase() + profile.id.slice(-4)
-        });
-        await newUser.save();
-        cb(null, newUser);
+        let user = await User.findOne({ googleId: profile.id });
+        if (!user) {
+            user = await new User({
+                googleId: profile.id,
+                username: profile.displayName.replace(/\s+/g, '').toLowerCase() + profile.id.slice(-4)
+            }).save();
+        }
+        cb(null, user);
     } catch (err) {
         cb(err);
     }
 }));
 
+// -----------------------------
+// Middlewares
+// -----------------------------
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "secret",
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, httpOnly: true }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Helper middleware
+const ensureAuth = (req, res, next) => {
+    if (req.isAuthenticated()) return next();
+    res.status(401).json({ error: "Unauthorized" });
+};
+
+// -----------------------------
+// Routes
+// -----------------------------
 app.get('/', (req, res) => {
     res.status(req.isAuthenticated() ? 200 : 401).json({
         message: req.isAuthenticated() ? "Authenticated" : "Unauthorized"
     });
 });
 
-app.get('/dashboard', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.json({ username: req.user.username });
-    } else {
-        res.status(401).json({ error: "Unauthorized" });
-    }
+app.get('/dashboard', ensureAuth, (req, res) => {
+    res.json({ username: req.user.username });
 });
 
+// Google OAuth
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
-
 app.get('/auth/google/game',
     passport.authenticate('google', { failureRedirect: '/login' }),
-    (req, res) => res.redirect('http://localhost:5173/dashboard'));
+    (req, res) => res.redirect('http://localhost:5173/dashboard')
+);
 
+// Local Signup
 app.post('/signup', (req, res) => {
-    console.log(req.body);
-    
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password are required.' });
 
@@ -108,6 +131,7 @@ app.post('/signup', (req, res) => {
     });
 });
 
+// Local Login
 app.post('/login', (req, res, next) => {
     passport.authenticate('local', (err, user) => {
         if (err) return next(err);
@@ -120,6 +144,7 @@ app.post('/login', (req, res, next) => {
     })(req, res, next);
 });
 
+// Logout
 app.post('/logout', (req, res, next) => {
     req.logout(err => {
         if (err) return next(err);
@@ -131,12 +156,18 @@ app.post('/logout', (req, res, next) => {
     });
 });
 
-app.listen(PORT, () => console.log(`HTTP server running on http://localhost:${PORT}`));
+// -----------------------------
+// HTTP + WebSocket Servers
+// -----------------------------
+app.listen(PORT, () => console.log(`🚀 HTTP server running at http://localhost:${PORT}`));
 
+const wss = new WebSocketServer({ port: WSPORT });
 const gamemanager = new GameManager();
+
 wss.on('connection', ws => {
     gamemanager.addUser(ws);
     ws.on('close', () => gamemanager.removeUser(ws));
     ws.on('error', console.error);
+
     ws.send(JSON.stringify({ type: "connected", message: "Welcome to the Chess server" }));
 });
