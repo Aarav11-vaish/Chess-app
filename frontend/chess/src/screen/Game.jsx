@@ -16,10 +16,23 @@ function Game() {
   const [userstate, setUserState] = useState('');
   const [username, setUsername] = useState('');
   const [turn, setTurn] = useState('w');
-  const [gameStatus, setGameStatus] = useState(''); // For game over states
+  const [gameStatus, setGameStatus] = useState('');
   const socket = usesocket();
 
   // Clear invalid move message after 3 seconds
+
+  useEffect(()=>{
+const data ={
+  fen:chess.fen(),
+  moves, 
+  playerColor, 
+  started,
+  turn , gameStatus
+};
+sessionStorage.setItem('chessstate', JSON.stringify(data));
+}, [chess , moves, playerColor, started, turn, gameStatus]);
+
+
   useEffect(() => {
     if (isinvalid) {
       const timer = setTimeout(() => setInvalid(false), 3000);
@@ -71,11 +84,10 @@ function Game() {
             setChess(prev => {
               const newChess = new Chess(prev.fen());
               
-              // Use the complete move object from server
               const result = newChess.move({
                 from: message.payload.from,
                 to: message.payload.to,
-                promotion: message.payload.promotion // Handle promotion
+                promotion: message.payload.promotion
               });
               
               if (!result) {
@@ -145,7 +157,6 @@ function Game() {
       setUserState("Connection error");
     };
 
-    // Cleanup function
     return () => {
       socket.onmessage = null;
     };
@@ -159,20 +170,17 @@ function Game() {
   };
 
   const handlePlayerMove = (from, to, promotion = 'q') => {
-    // Check if it's player's turn
     const myTurn = playerColor === 'white' ? 'w' : 'b';
     if (turn !== myTurn) {
       setInvalid(true);
       return;
     }
 
-    // Check if game is over
     if (gameStatus) {
       return;
     }
 
     try {
-      // Create a copy to test the move first
       const testChess = new Chess(chess.fen());
       const testResult = testChess.move({ from, to, promotion });
       
@@ -180,7 +188,6 @@ function Game() {
         throw new Error("Invalid move");
       }
 
-      // If valid, apply to actual game state
       setChess(prev => {
         const newChess = new Chess(prev.fen());
         const result = newChess.move({ from, to, promotion });
@@ -192,7 +199,6 @@ function Game() {
         return newChess;
       });
 
-      // Send move to server
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ 
           type: "move", 
@@ -218,102 +224,203 @@ function Game() {
     setInvalid(false);
   };
 
-  if (!socket) return <div className="text-white text-center mt-10">Connecting...</div>;
+  if (!socket) {
+    return (
+      <div className="min-h-screen bg-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-green-500 border-t-transparent mx-auto mb-4"></div>
+          <div className="text-white text-lg">Connecting...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white">
-      <nav className="bg-gray-800 px-6 py-4 shadow-lg flex justify-between items-center">
-        <div className="text-2xl font-bold">♔ Chess</div>
-        <div className="flex gap-4">
-          {gameStatus && (
+    <div className="min-h-screen bg-gray-800">
+      {/* Top Navigation */}
+      <nav className="bg-gray-900 border-b border-gray-700 px-4 py-3">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="text-2xl font-bold text-white">Chess.com</div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-300">{username}</span>
+            {gameStatus && (
+              <button
+                onClick={resetGame}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+              >
+                New Game
+              </button>
+            )}
             <button
-              onClick={resetGame}
-              className="bg-blue-600 px-4 py-2 rounded-md hover:bg-blue-700"
+              onClick={async () => {
+                try {
+                  await fetch("http://localhost:5000/logout", {
+                    method: "POST",
+                    credentials: "include"
+                  });
+                  navigate("/");
+                  window.location.reload();
+                } catch (err) {
+                  console.error("Logout error:", err);
+                }
+              }}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
             >
-              New Game
+              Logout
             </button>
-          )}
-          <button
-            onClick={async () => {
-              try {
-                await fetch("http://localhost:5000/logout", {
-                  method: "POST",
-                  credentials: "include"
-                });
-                navigate("/");
-                window.location.reload();
-              } catch (err) {
-                console.error("Logout error:", err);
-              }
-            }}
-            className="bg-red-600 px-4 py-2 rounded-md hover:bg-red-700"
-          >
-            Logout
-          </button>
+          </div>
         </div>
       </nav>
 
-      <div className="text-center text-2xl py-4">
-        Welcome, {username}
-      </div>
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="flex flex-col lg:flex-row gap-6">
+          
+          {/* Left Sidebar - Game Info */}
+          <div className="lg:w-80 space-y-4">
+            
+            {/* Players Panel */}
+            <div className="bg-gray-900 rounded-lg border border-gray-700">
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="text-white font-semibold">Players</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* Opponent */}
+                <div className="flex items-center justify-between p-2 rounded bg-gray-800">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded ${
+                      playerColor === 'white' ? 'bg-gray-900' : 'bg-white'
+                    }`}></div>
+                    <span className="text-gray-300 text-sm">Opponent</span>
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    {started ? 'Connected' : 'Waiting...'}
+                  </div>
+                </div>
+                
+                {/* Current Player */}
+                <div className="flex items-center justify-between p-2 rounded bg-gray-800">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded ${
+                      playerColor === 'white' ? 'bg-white' : 'bg-gray-900'
+                    }`}></div>
+                    <span className="text-white text-sm font-medium">{username}</span>
+                  </div>
+                  <div className="text-green-400 text-xs">You</div>
+                </div>
+              </div>
+            </div>
 
-      {started && playerColor && (
-        <div className="text-center text-lg mb-2">
-          You are playing as: 
-          <span className={`font-bold ml-2 ${playerColor === 'white' ? 'text-white' : 'text-gray-300'}`}>
-            {playerColor.charAt(0).toUpperCase() + playerColor.slice(1)}
-          </span>
-        </div>
-      )}
+            {/* Game Status */}
+            <div className="bg-gray-900 rounded-lg border border-gray-700">
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="text-white font-semibold">Game Status</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {started && !gameStatus && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400 text-sm">Turn:</span>
+                      <span className={`text-sm font-medium ${
+                        turn === 'w' ? 'text-white' : 'text-gray-300'
+                      }`}>
+                        {turn === 'w' ? 'White' : 'Black'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400 text-sm">Moves:</span>
+                      <span className="text-white text-sm">{moves.length}</span>
+                    </div>
+                    {turn === (playerColor === 'white' ? 'w' : 'b') ? (
+                      <div className="text-green-400 text-sm text-center font-medium">
+                        Your turn
+                      </div>
+                    ) : (
+                      <div className="text-yellow-400 text-sm text-center">
+                        Opponent's turn
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {gameStatus && (
+                  <div className="text-center">
+                    <div className="text-red-400 text-sm font-medium mb-2">
+                      Game Over
+                    </div>
+                    <div className="text-gray-300 text-xs">
+                      {gameStatus.replace('Game Over! ', '')}
+                    </div>
+                  </div>
+                )}
 
-      <div className="text-center text-lg mb-4">
-        {started && !gameStatus && (
-          <>
-            <span>Current Turn: </span>
-            <span className="font-bold text-green-400">
-              {turn === 'w' ? 'White' : 'Black'}
-            </span>
-            {turn === (playerColor === 'white' ? 'w' : 'b') ? (
-              <span className="ml-3 text-green-400 animate-pulse">Your Move</span>
-            ) : (
-              <span className="ml-3 text-gray-400">Waiting for opponent...</span>
+                {!started && (
+                  <div className="text-center text-gray-400 text-sm">
+                    {userstate || 'Ready to play'}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Move List */}
+            {moves.length > 0 && (
+              <div className="bg-gray-900 rounded-lg border border-gray-700">
+                <div className="p-4 border-b border-gray-700">
+                  <h3 className="text-white font-semibold">Moves</h3>
+                </div>
+                <div className="p-4">
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {moves.map((move, index) => (
+                      <div key={index} className="flex justify-between text-sm">
+                        <span className="text-gray-400">{Math.floor(index / 2) + 1}.</span>
+                        <span className="text-gray-300">{move.san}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
-          </>
-        )}
-        {gameStatus && (
-          <div className="text-red-400 font-bold text-xl">{gameStatus}</div>
-        )}
-      </div>
+          </div>
 
-      {isinvalid && (
-        <div className="text-red-400 text-center mb-4 animate-pulse">
-          Invalid move! Please try again.
+          {/* Main Game Area */}
+          <div className="flex-1">
+            <div className="bg-gray-900 rounded-lg border border-gray-700 p-6">
+              
+              {/* Error Messages */}
+              {isinvalid && (
+                <div className="mb-4 p-3 bg-red-900/30 border border-red-600 rounded text-red-300 text-sm text-center">
+                  Invalid move! Try again.
+                </div>
+              )}
+
+              {/* Chess Board Container */}
+              <div className="flex justify-center">
+                <div className="relative">
+                  <ChessBoard 
+                    board={board} 
+                    onMove={handlePlayerMove}
+                    playerColor={playerColor}
+                    disabled={gameStatus !== ''}
+                  />
+                </div>
+              </div>
+
+              {/* Start Game Button */}
+              {!started && !userstate && (
+                <div className="text-center mt-6">
+                  <Button 
+                    onClick={handleInitGame}
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Start Game
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      )}
-
-      {userstate && !started && (
-        <div className="text-center mb-4 text-yellow-400">
-          {userstate}
-        </div>
-      )}
-
-      <div className="flex justify-center">
-        <ChessBoard 
-          board={board} 
-          onMove={handlePlayerMove}
-          playerColor={playerColor}
-          disabled={gameStatus !== ''}
-        />
-      </div>
-
-      {!started && !userstate && (
-        <div className="text-center mt-6">
-          <Button onClick={handleInitGame}>Start Game</Button>
-        </div>
-      )}
-
-      <div className="text-center mt-4 text-sm text-gray-400">
-        Moves: {moves.length}
       </div>
     </div>
   );
