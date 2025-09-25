@@ -20,7 +20,8 @@ function Login() {
             const data = await response.json();
     
             if (response.ok) {
-                navigate('/dashboard'); 
+              window.location.href = '/dashboard';
+                
             } else {
                 console.log(data, "user already exists");               
 

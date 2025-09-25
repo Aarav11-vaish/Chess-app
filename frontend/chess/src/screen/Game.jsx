@@ -35,7 +35,7 @@ sessionStorage.setItem('chessstate', JSON.stringify(data));
 
   useEffect(() => {
     if (isinvalid) {
-      const timer = setTimeout(() => setInvalid(false), 3000);
+      const timer = setTimeout(() => setInvalid(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [isinvalid]);

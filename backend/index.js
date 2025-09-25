@@ -10,10 +10,12 @@ import { GameManager } from './gamemanager.js';
 import passportLocalMongoose from 'passport-local-mongoose';
 import findOrCreate from 'mongoose-findorcreate';
 import bodyParser from 'body-parser';
-
+import {createServer} from 'http';
+import bcrypt from 'bcryptjs';
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 5000;
 const WSPORT = process.env.WSPORT || 8080;
 
@@ -51,13 +53,14 @@ passport.deserializeUser(async (id, done) => {
         done(err);
     }
 });
+//why do we serialize and desiarilize the user? to store user info in session and retrieve it later
 
 // Google OAuth Strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/auth/google/game",
-    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+    callbackURL: process.env.callback_URL,
+    userProfileURL: process.env.user_profile_URL
 }, async (accessToken, refreshToken, profile, cb) => {
     try {
         let user = await User.findOne({ googleId: profile.id });
@@ -72,17 +75,16 @@ passport.use(new GoogleStrategy({
         cb(err);
     }
 }));
-
 // -----------------------------
 // Middlewares
 // -----------------------------
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: process.env.front_end_URL,credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || "secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, httpOnly: true }
@@ -106,6 +108,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/dashboard', ensureAuth, (req, res) => {
+
     res.json({ username: req.user.username });
 });
 
@@ -113,7 +116,7 @@ app.get('/dashboard', ensureAuth, (req, res) => {
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
 app.get('/auth/google/game',
     passport.authenticate('google', { failureRedirect: '/login' }),
-    (req, res) => res.redirect('http://localhost:5173/dashboard')
+    (req, res) => res.redirect(`${process.env.front_end_URL}/dashboard`)
 );
 
 // Local Signup
@@ -159,9 +162,9 @@ app.post('/logout', (req, res, next) => {
 // -----------------------------
 // HTTP + WebSocket Servers
 // -----------------------------
-app.listen(PORT, () => console.log(`🚀 HTTP server running at http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`🚀 HTTP server running at http://localhost:${PORT}`));
 
-const wss = new WebSocketServer({ port: WSPORT });
+const wss = new WebSocketServer({server});
 const gamemanager = new GameManager();
 
 wss.on('connection', ws => {
