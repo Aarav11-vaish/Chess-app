@@ -4,7 +4,7 @@ function usesocket() {
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8080");
+        const ws = new WebSocket("ws://localhost:5000");
 
         ws.onopen = () => {
             console.log("Connected to server");
